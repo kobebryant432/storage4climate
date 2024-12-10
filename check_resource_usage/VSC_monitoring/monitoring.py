@@ -50,7 +50,7 @@ git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
 #git_dir='..'
 path = Path(git_dir) / f"VSC_monitoring/"
 
-file = f"requested_resources_{year}.csv"
+file = f"{path}/requested_resources_{year}.csv"
 # load requested resources
 df_requested = pd.read_csv(file, delimiter=";",index_col=0)
 
