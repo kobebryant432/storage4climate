@@ -49,9 +49,9 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
 git_dir =  git_dir.rsplit("/storage4climate", 1)[0]
 #git_dir='..'
-path = Path(git_dir) / f"check_resource_usage/VSC_monitoring/"
+path_monitoring = f"check_resource_usage/VSC_monitoring/"
 
-file = f"{path}/requested_resources_{year}.csv"
+file = f"{path_monitoring}requested_resources_{year}.csv"
 # load requested resources
 df_requested = pd.read_csv(file, delimiter=";",index_col=0)
 
@@ -65,7 +65,7 @@ for i, group in enumerate(d_projects.keys()):
 
 
     # read the input files
-    path = rf'{git_dir}/VSC_monitoring/input'
+    path = rf'{path_monitoring}input'
     all_files = glob.glob(f'{path}/*{project}.csv')
 
     df = pd.read_csv(all_files[0], header=1)
@@ -192,10 +192,10 @@ plt.show()
 
 
 # save figure and table
-plt.savefig(f'{git_dir}/VSC_monitoring/output/monitoring.png')
+plt.savefig(f'{path_monitoring}/output/monitoring.png')
 df_used_credits.to_csv(f'{git_dir}/VSC_monitoring/output/used_resources.csv')
 
 #Move the csv file to the output archive folder
-shutil.move(all_files[0], f'{git_dir}/VSC_monitoring/archive/')
-shutil.copy(f'{git_dir}/VSC_monitoring/output/monitoring.png', f'{git_dir}/VSC_monitoring/archive/{current_quarter}_{date}_monitoring.png')
-shutil.copy(f'{git_dir}/VSC_monitoring/output/used_resources.csv', f'{git_dir}/VSC_monitoring/archive/{current_quarter}_{date}_used_resources.csv')
+shutil.move(all_files[0], f'{path_monitoring}/archive/')
+shutil.copy(f'{path_monitoring}/output/monitoring.png', f'{path_monitoring}/archive/{current_quarter}_{date}_monitoring.png')
+shutil.copy(f'{path_monitoring}/output/used_resources.csv', f'{path_monitoring}/archive/{current_quarter}_{date}_used_resources.csv')
