@@ -22,12 +22,14 @@ for project_name in "${project_names[@]}"; do
     sed -i '1,/Project Usages/{/Project Usages/!d}' "$input_file"
 
     echo "Copied project: $project_name"
+
+    # Add and commit the changes
+    git pull
+    git add $input_file
+
 done
 
-# Add and commit the changes
-git pull
-git add $input_file
-git commit -m "Add usage data for project $project_name"
+git commit -m "Add usage data for projects $project_names"
 git push
 
 #A github action will run python script and update the usage.
