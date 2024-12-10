@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # List of project names to iterate over
-project_names=("2022_201" "2022_202" "2022_203" "2022_204" "2022_205")
+project_names=(""  "2022_201" "2022_202" "2022_203" "2022_204" "2022_205")
 
 # Ensure the script is run from the correct directory
 cd "$(dirname "$0")"
