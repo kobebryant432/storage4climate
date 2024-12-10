@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt  # Replace with your requirements file if needed
 
       - name: Run Python script
-        run: python VSC_monitoring/monitoring.py  # Replace 'script.py' with your Python script filename and 'folder' with your folder name
+        run: python check_resource_usage/VSC_monitoring/monitoring.py  # Replace 'script.py' with your Python script filename and 'folder' with your folder name
 
       - name: Update Date
         run: |
