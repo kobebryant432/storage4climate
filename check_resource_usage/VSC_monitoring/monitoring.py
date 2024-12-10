@@ -1,4 +1,3 @@
-#Import the csv file as pandas dataframe
 import pandas as pd
 pd.options.mode.copy_on_write = True
 import matplotlib.pyplot as plt
@@ -6,158 +5,198 @@ import glob
 import seaborn as sns
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
+from pathlib import Path
+import shutil
+import numpy as np
+import os
 
-def millions(x, pos):
-    'The two args are the value and tick position'
-    return '%1.1fM' % (x * 1e-6)
 
-mil_formatter = FuncFormatter(millions)
+#########################
+#       Settings        #
+#########################
+
+
+year = '2024'
+current_quarter = 'Q4'
+
+d_quarters = {'Q1': pd.date_range(start=pd.to_datetime("2024-02-08"), end=pd.to_datetime("2024-05-08")), 
+              'Q2': pd.date_range(start=pd.to_datetime("2024-05-08"),end=pd.to_datetime("2024-08-08")), 
+              'Q3': pd.date_range(start=pd.to_datetime("2024-08-08"),end=pd.to_datetime("2024-11-08")), 
+              'Q4': pd.date_range(start=pd.to_datetime("2024-11-08"),end=pd.to_datetime("2025-02-08")) }
+
+d_projects = {'BCLIMATE'  :  '2022_201', 
+              'RCS'       :  '2022_202', 
+              'RSDA'      :  '2022_203',
+              'H-CEL'     :  '2022_204',
+              'RMIB-UGENT':  '2022_205'}
+
+
+
+# Create bar plots
+#Set the style of the plots 
+sns.set_theme(style='whitegrid')
+fig, axes = plt.subplots(3,2,figsize=(16, 15))
+axes= axes.flatten()
+colors = ['tab:blue', 'tab:orange', 'tab:green','tab:red','tab:purple']
+date = pd.to_datetime('today').strftime('%Y%m%d')
+
 
 #########################
 #        Inputs         #
 #########################
 
 #Get the git directory
-import os
+#git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
+#path = Path(git_dir) / f"VSC_monitoring/"
+git_dir='..'
 
-git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
-path = rf'{git_dir}/VSC_monitoring/input'
-all_files = glob.glob(f'{path}/*.csv')
+file = f"requested_resources_{year}.csv"
+# load requested resources
+df_requested = pd.read_csv(file, delimiter=";",index_col=0)
 
-current_quarter = 'Q3'
-quarter_credits = {'Q1': 6200000, 'Q2': 5000000, 'Q3': 5000000, 'Q4': 4600000}
+# select one project group
 
-#Create an extra plot showing the total credits requested vs the total credits used per user and in total
-requested_per_user = {
-    "vsc46032": 12756800,
-    "vsc45263": 2467726,
-    "vsc45628": 5111550,
-    "vsc45381": 1670600,
-    "vsc46275": 114282,
-    "vsc44757": 5990489,
-}
+for i, group in enumerate(d_projects.keys()): 
+    print(group)
+    project = d_projects[group]
 
-date= pd.to_datetime('today').strftime('%Y%m%d')
+    quarter_credits = df_requested.loc[group]
 
-#########################
-#     Pre-processing    #
-#########################
 
-df = pd.read_csv(all_files[0], header=1)
+    # read the input files
+    #path = rf'{git_dir}/VSC_monitoring/input'
+    #all_files = glob.glob(f'{path}/*{project}.csv')
 
-#Get the index of the row containing project logs in resource column
-index_logs = df[df['Resource'] == 'Project Logs'].index[0]
-df_overview = df[:index_logs]
-df_credits = df_overview[df_overview['Resource'] == 'credits']
-df_credits['Total_used'] = df_credits['Current used by user'].str.replace(' Hours', '').astype(float)
-df_credits['Cumulative_used_by_user'] = df_credits['Total used by user'].str.replace(' Hours', '').astype(float)
-df_credits['Cumulative_total_used'] = df_credits['Total used'].str.replace(' Hours', '').astype(float)
-df_credits['Date'] = pd.to_datetime(df_credits['Date'], format='%d/%m/%Y - %H:%M').dt.date
-df_credits = df_credits.sort_values(by='Date')
+    all_files = glob.glob(f'input/*{project}.csv')
 
-Total_credits = sum(quarter_credits.values())
+    df = pd.read_csv(all_files[0], header=1)
 
-#Make a dictionary with the remaining credits per quarter by subtracting the total used from the total credits per quarter until there are no credits left
-remaining_credits = quarter_credits.copy()
-total_used = sum(df_credits['Total_used'])
-for key in remaining_credits.keys():
-    if total_used > 0:
-        if remaining_credits[key] > total_used:
-            remaining_credits[key] -= total_used
-            total_used = 0
-        else:
-            total_used -= remaining_credits[key]
-            remaining_credits[key] = 0
 
-remaining_credits['Used'] = sum(df_credits['Total_used'])
 
-##########################
-#   Plotting the data    #    
-##########################
-def pie_labels(data: dict):
-    return [f'{key} \n ({value * 1e-6:.1f}M hours)' for key, value in data.items()]
+    #########################
+    #     Pre-processing    #
+    #########################
 
-#Set the style of the plots 
-sns.set_theme(style='whitegrid')
 
-#Make a plot with 4 subplots
-fig, axs = plt.subplots(2, 2, figsize=(15, 10))
+    #Get the index of the row containing project logs in resource column
+    index_logs = df[df['Resource'] == 'Project Logs'].index[0]
+    df_overview = df[:index_logs]
+    df_credits = df_overview[df_overview['Resource'] == 'credits']
+    df_credits['Total_used'] = df_credits['Current used by user'].str.replace(' Hours', '').astype(float)
+    df_credits['Cumulative_used_by_user'] = df_credits['Total used by user'].str.replace(' Hours', '').astype(float)
+    df_credits['Cumulative_total_used'] = df_credits['Total used'].str.replace(' Hours', '').astype(float)
+    df_credits['Date'] =  pd.to_datetime(pd.to_datetime(df_credits['Date'], format='%d/%m/%Y - %H:%M').dt.date)
+    df_credits = df_credits.sort_values(by='Date')
 
-#Fig 1: sns pie-chart showing the total used and the remaining credits the remaining credits per quarter
-axs[0, 0].pie(remaining_credits.values(), labels=pie_labels(remaining_credits), autopct='%1.1f%%')
-axs[0, 0].set_title(f'Total used and remaining credits (per quarter)')
+    Total_credits = quarter_credits['total']
 
-#Fig 2: pie-chart showing the used and unused credits for the current quarter
-data = {'Unused': remaining_credits[current_quarter], 'Used': quarter_credits[current_quarter] - remaining_credits[current_quarter]}
-axs[0, 1].pie(data.values(), labels=pie_labels(data), autopct='%1.1f%%')
-axs[0, 1].set_title(f'Credit usage: {current_quarter}')
+    #Make a dictionary with the remaining credits per quarter by subtracting the total used from the total credits per quarter until there are no credits left
+    used_credits = quarter_credits.copy().loc[['Q1','Q2','Q3','Q4']]
 
-#Fig 3: sns bar-chart showing the total used in function of time (grouped by day) and the cumulative total used
-sns.lineplot(x='Date', y='Cumulative_used_by_user', data=df_credits, hue='User', ax=axs[1, 0])
-sns.lineplot(x='Date', y='Cumulative_total_used', data=df_credits, color='red', ax=axs[1, 0], label='Total used')
 
-axs[1, 0].set_ylabel('Credits (hours Million)')
-axs[1, 0].yaxis.set_major_formatter(mil_formatter)
-axs[1, 0].set_title('Total used over time')
-axs[1, 0].tick_params(axis='x', rotation=45)
 
-#Fig 4: sns bar-chart showing the total used credits per user
-df_users = df_credits.groupby('User')["Total_used"].sum().reset_index()
-sns.barplot(x='User', y='Total_used', data=df_users, ax=axs[1, 1])
-axs[1, 1].set_ylabel('Credits (hours Million)')
-axs[1, 1].yaxis.set_major_formatter(mil_formatter)
-axs[1, 1].set_title('Total used per user')
-axs[1, 1].tick_params(axis='x', rotation=45)
+    for key in d_quarters.keys():
 
+        df_credits_quarter = df_credits[df_credits['Date'].isin(d_quarters[key])]
+        used_credits[key] = (df_credits_quarter['Total_used']).sum()
+        
+    used_credits['total'] = df_credits['Total_used'].sum()
+
+
+    # save loaded credits for stacked bar plot
+    if i==0: 
+        df_requested_credits = quarter_credits.to_frame()
+        df_used_credits = used_credits.to_frame()
+    else: 
+    
+        df_requested_credits = df_requested_credits.merge(quarter_credits.to_frame(), left_index=True, right_index=True)
+        df_used_credits = df_used_credits.merge(used_credits.to_frame(), left_index=True, right_index=True)
+
+    #########################
+    #     Plotting          #
+    #########################
+
+    ax = axes[i]
+    # Plot remaining_credits and quarter_credits
+    ax.bar(quarter_credits.index, quarter_credits.values*1e-6, label='Requested credits', color='white',  edgecolor='gray', linewidth=2, width=0.4, align='center')
+    ax.bar(used_credits.index, used_credits.values*1e-6, label='Used credits', color=colors[i],edgecolor=colors[i], linewidth=2, alpha=0.3, width=0.4, align='center')
+
+    # Add percentage text on top of each bar (used/quarter credits)
+    for idx in range(len(quarter_credits) ):  # Exclude 'total' row for now
+        quarter_value = quarter_credits.iloc[idx]
+        used_value = used_credits.iloc[idx]
+        if quarter_value > 0:  # Avoid division by zero
+            percentage_used = (used_value / quarter_value) * 100
+            ax.text(idx, (used_value * 1e-6) + (used_value * 1e-6)*0.02, f'{percentage_used:.1f}%', ha='center', va='bottom', fontsize=10, color='black')
+
+
+    # Add the total number of quarter and used credits in a box
+    total_quarter_credits = quarter_credits['total']
+    total_used_credits = used_credits['total']
+
+    text_str = f'Total Requested: {total_quarter_credits * 1e-3:.0f}k\nTotal Used: {total_used_credits * 1e-3:.0f}k'
+
+    # Add text with a box around it
+    ax.text(0.8, 0.96, text_str, transform=ax.transAxes, ha='right', va='top', fontsize=12,
+            bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3'))
+
+    # Customize the plot
+    ax.set_ylabel('Credits (million CPU hours)')
+    ax.set_title(f'{pd.to_datetime(date).date()} ({current_quarter})', loc='right', size=16)
+
+    ax.set_title(f'{group} ({project})', loc='left', size=16)
+    ax.legend( frameon=False, loc='upper left')
+
+
+## stacked figure
+
+ax = axes[-1]
+
+df_used_credits.loc['total'] = df_used_credits.loc[['Q1','Q2','Q3','Q4']].sum()
+
+
+(df_requested_credits*1e-6).sum(axis=1).plot.bar(ax=ax, label='Requested credits', color='white',  edgecolor='gray', linewidth=2, width=0.4, align='center')
+(df_used_credits*1e-6).plot.bar(ax=ax, stacked=True, label='Used credits', color=colors,linewidth=2,  edgecolor='gray', alpha=0.5, width=0.4, align='center')
+
+
+for idx in range(len(df_requested_credits) ):  # Exclude 'total' row for now
+    quarter_value = (df_requested_credits.sum(axis=1)*1e-6).iloc[idx]
+    used_value = (df_used_credits*1e-6).sum(axis=1).iloc[idx]
+    if quarter_value > 0:  # Avoid division by zero
+        percentage_used = (used_value / quarter_value) * 100
+        ax.text(idx+0.01, (used_value ) + (used_value )*0.02, f'{percentage_used:.1f}%', ha='center', va='bottom', fontsize=10, color='black')
+
+
+# Add the total number of quarter and used credits in a box
+total_quarter_credits = (df_requested_credits.loc[['Q1','Q2','Q3','Q4']]).sum(axis=1).sum()
+total_used_credits = (df_used_credits.loc[['Q1','Q2','Q3','Q4']]).sum().sum()
+
+
+text_str = f'Total Requested: {total_quarter_credits * 1e-6:.0f}M\nTotal Used: {total_used_credits * 1e-6:.0f}M'
+
+# Add text with a box around it
+ax.text(0.8, 0.96, text_str, transform=ax.transAxes, ha='right', va='top', fontsize=12,
+        bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3'))
+
+# Customize the plot
+ax.set_ylabel('Credits (million CPU hours)')
+ax.set_title(f'{pd.to_datetime(date).date()} ({current_quarter})', loc='right', size=16)
+ax.set_xticklabels(list(df_requested_credits.index), rotation=0)
+ax.set_title(f'Storage4Climate consortium', loc='left', size=16)
+ax.legend( frameon=False, loc='upper left')
+
+
+
+# Show plot
 plt.tight_layout()
-plt.subplots_adjust(bottom=0.2)
-plt.savefig(f'{git_dir}/VSC_monitoring/output/monitoring.png')
 plt.show()
 
-##########################
-##      Extra plot      ##
-##########################
-#Additional plot to view the total requested credits vs the total used credits per user
 
-df_users['Total_requested'] = df_users['User'].map(requested_per_user)
-#Remove the users that have no requested credits
-df_users['Total_remaining'] = df_users['Total_requested'] - df_users['Total_used']
-
-#Get the sum of the total_used if total_requested is NaN
-rest_users_use = df_users[df_users['Total_requested'].isna()]['Total_used'].sum()
-
-#Drop the users that have no requested credits
-df_req = df_users[['User', 'Total_requested', 'Total_used']].copy()
-df_req = df_req.dropna()
-
-#Add an all users row
-df_req.loc[len(df_req)] = {"User": "All users", "Total_requested": Total_credits, "Total_used": sum(df_credits['Total_used'])}
-df_req.loc[len(df_req)] = {"User": "Remaining users", "Total_requested": Total_credits - sum(requested_per_user.values()), "Total_used": rest_users_use}
-
-df_req = df_req.sort_values(by='Total_requested', ascending=False)
-
-#Plot the total requested amount as a bar plot with the total used amount as a bar plot on top of it
-
-fig, ax = plt.subplots(figsize=(10, 5))
-sns.barplot(x='User', y='Total_requested', data=df_req, ax=ax, color='blue', label='Requested', alpha=0.5)
-sns.barplot(x='User', y='Total_used', data=df_req, ax=ax, color='red', label='Used', alpha=0.8)
-
-#Add the percentage of the total used credits per user on top of the bars as text
-for idx, row in df_req.iterrows():
-    ax.text(row.User, row['Total_used'] + 0.1e6, f'{row["Total_used"] / row["Total_requested"] * 100:.1f}%', ha='center', va='bottom')
-
-
-ax.set_ylabel('Credits (hours Million)')
-ax.yaxis.set_major_formatter(mil_formatter)
-ax.set_title('Requested and used credits')
-ax.legend()
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig(f'{git_dir}/VSC_monitoring/output/monitoring_users.png')
+# save figure and table
+plt.savefig(f'{git_dir}VSC_monitoring/output/monitoring.png')
+df_used_credits.to_csv(f'{git_dir}VSC_monitoring/output/used_resources.csv')
 
 #Move the csv file to the output archive folder
-import shutil
 shutil.move(all_files[0], f'{git_dir}/VSC_monitoring/archive/')
 shutil.copy(f'{git_dir}/VSC_monitoring/output/monitoring.png', f'{git_dir}/VSC_monitoring/archive/{current_quarter}_{date}_monitoring.png')
-shutil.copy(f'{git_dir}/VSC_monitoring/output/monitoring_users.png', f'{git_dir}/VSC_monitoring/archive/{current_quarter}_{date}_monitoring_users.png')
-
+shutil.copy(f'{git_dir}/VSC_monitoring/output/used_resources.csv', f'{git_dir}/VSC_monitoring/archive/{current_quarter}_{date}_used_resources.csv')
