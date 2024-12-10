@@ -13,7 +13,7 @@ for project_name in "${project_names[@]}"; do
     # Get the CSV file from the project
     file="/dodrio/scratch/projects/$project_name/.resource_app.usage.export.csv"
     git_dir=$(git rev-parse --show-toplevel)
-    input_file="$git_dir/VSC_monitoring/input/usage_$(date +"%Y%m%d")_${project_name}.csv"
+    input_file="$git_dir/check_resource_usage/VSC_monitoring/input/usage_$(date +"%Y%m%d")_${project_name}.csv"
 
     # Copy the file
     cp "$file" "$input_file"
