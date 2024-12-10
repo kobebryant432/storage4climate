@@ -4,11 +4,11 @@ Originally created by Kobe Vandelanotte [kobebryant432](https://github.com/kobeb
 
 Original github repo [VSC_ugent](https://github.com/kobebryant432/VSC_ugent). 
 
-# Up to date monitoring
+# Current resources state
 
 ![](VSC_monitoring/output/monitoring.png)
 
-## How to update
+# How to update
 
 If not done already, clone this repository
 
