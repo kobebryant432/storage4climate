@@ -46,9 +46,9 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 #########################
 
 #Get the git directory
-#git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
-#path = Path(git_dir) / f"VSC_monitoring/"
+git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
 git_dir='..'
+path = Path(git_dir) / f"VSC_monitoring/"
 
 file = f"requested_resources_{year}.csv"
 # load requested resources
@@ -64,10 +64,8 @@ for i, group in enumerate(d_projects.keys()):
 
 
     # read the input files
-    #path = rf'{git_dir}/VSC_monitoring/input'
-    #all_files = glob.glob(f'{path}/*{project}.csv')
-
-    all_files = glob.glob(f'input/*{project}.csv')
+    path = rf'{git_dir}/VSC_monitoring/input'
+    all_files = glob.glob(f'{path}/*{project}.csv')
 
     df = pd.read_csv(all_files[0], header=1)
 
