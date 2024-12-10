@@ -191,8 +191,8 @@ plt.show()
 
 
 # save figure and table
-plt.savefig(f'{git_dir}VSC_monitoring/output/monitoring.png')
-df_used_credits.to_csv(f'{git_dir}VSC_monitoring/output/used_resources.csv')
+plt.savefig(f'{git_dir}/VSC_monitoring/output/monitoring.png')
+df_used_credits.to_csv(f'{git_dir}/VSC_monitoring/output/used_resources.csv')
 
 #Move the csv file to the output archive folder
 shutil.move(all_files[0], f'{git_dir}/VSC_monitoring/archive/')
