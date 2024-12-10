@@ -49,7 +49,7 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
 git_dir =  git_dir.rsplit("/storage4climate", 1)[0]
 #git_dir='..'
-path = Path(git_dir) / f"VSC_monitoring/"
+path = Path(git_dir) / f"check_resource_usage/VSC_monitoring/"
 
 file = f"{path}/requested_resources_{year}.csv"
 # load requested resources
