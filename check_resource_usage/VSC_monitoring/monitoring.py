@@ -47,6 +47,7 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 
 #Get the git directory
 git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
+git_dir =  git_dir.rsplit("/storage4climate", 1)[0]
 #git_dir='..'
 path = Path(git_dir) / f"VSC_monitoring/"
 
