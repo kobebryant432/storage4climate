@@ -29,7 +29,7 @@ for project_name in "${project_names[@]}"; do
 
 done
 
-git commit -m "Add usage data for projects $project_names"
+git commit -m "Add usage data for all projects"
 git push
 
 #A github action will run python script and update the usage.
