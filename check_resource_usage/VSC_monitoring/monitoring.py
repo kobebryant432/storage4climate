@@ -46,16 +46,13 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 #########################
 
 #Get the git directory
-git_dir = os.popen('git rev-parse --show-toplevel').read().strip()
-git_dir =  git_dir.rsplit("/storage4climate", 1)[0]
-#git_dir='..'
 path_monitoring = f"check_resource_usage/VSC_monitoring/"
 
 file = f"{path_monitoring}requested_resources_{year}.csv"
 # load requested resources
 # load requested resources
 df_initial_requested = pd.read_csv(file, delimiter=";",index_col=0)
-df_transferred = pd.read_csv(f"transferred_resources_{year}.csv", delimiter=";",index_col=0)
+df_transferred = pd.read_csv(f"{path_monitoring}transferred_resources_{year}.csv", delimiter=";",index_col=0)
 df_requested = df_initial_requested + df_transferred
 
 # select one project group
@@ -199,6 +196,7 @@ plt.savefig(f'{path_monitoring}/output/monitoring.png')
 df_used_credits.to_csv(f'{path_monitoring}/output/used_resources.csv')
 
 #Move the csv file to the output archive folder
+
 shutil.move(all_files[0], f'{path_monitoring}/archive/')
 shutil.copy(f'{path_monitoring}/output/monitoring.png', f'{path_monitoring}/archive/{current_quarter}_{date}_monitoring.png')
 shutil.copy(f'{path_monitoring}/output/used_resources.csv', f'{path_monitoring}/archive/{current_quarter}_{date}_used_resources.csv')
