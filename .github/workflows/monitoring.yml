@@ -28,14 +28,6 @@ jobs:
       - name: Run Python script
         run: python check_resource_usage/VSC_monitoring/monitoring.py  # Replace 'script.py' with your Python script filename and 'folder' with your folder name
 
-      - name: Update Date
-        run: |
-          #!/bin/bash
-          
-          file="README.md"
-          current_date=$(date +"%d\/%m\/%Y")
-          sed -i "s/Date: [0-9]\{2\}\/[0-9]\{2\}\/[0-9]\{4\}/Date: $current_date/g" "$file"
-
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

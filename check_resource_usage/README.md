@@ -25,7 +25,7 @@ Move to the right directory and execute the update_usage bash script.
 This will copy the csv log files for the different projects. A github workflow will try to process the csv and update the monitoring image.
 
 > [!NOTE]  
-> You need to be a moderator for all projects can access the csv log files. 
+> You need to be a moderator for all projects to access the csv log files. 
 
 
 This infromation can also be checked from the VSC [resapp](https://resapp.hpc.ugent.be/).
