@@ -53,7 +53,10 @@ path_monitoring = f"check_resource_usage/VSC_monitoring/"
 
 file = f"{path_monitoring}requested_resources_{year}.csv"
 # load requested resources
-df_requested = pd.read_csv(file, delimiter=";",index_col=0)
+# load requested resources
+df_initial_requested = pd.read_csv(file, delimiter=";",index_col=0)
+df_transferred = pd.read_csv(f"transferred_resources_{year}.csv", delimiter=";",index_col=0)
+df_requested = df_initial_requested + df_transferred
 
 # select one project group
 
@@ -133,7 +136,7 @@ for i, group in enumerate(d_projects.keys()):
     total_quarter_credits = quarter_credits['total']
     total_used_credits = used_credits['total']
 
-    text_str = f'Total Requested: {total_quarter_credits * 1e-3:.0f}k\nTotal Used: {total_used_credits * 1e-3:.0f}k'
+    text_str = f'Total Requested: {total_quarter_credits * 1e-6:.1f}M\nTotal Used: {total_used_credits * 1e-6:.1f}M\nTotal Transferred: {total_transferred_credits * 1e-6:.1f}M'
 
     # Add text with a box around it
     ax.text(0.8, 0.96, text_str, transform=ax.transAxes, ha='right', va='top', fontsize=12,
