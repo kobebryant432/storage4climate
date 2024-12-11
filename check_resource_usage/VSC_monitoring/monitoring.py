@@ -132,6 +132,7 @@ for i, group in enumerate(d_projects.keys()):
     # Add the total number of quarter and used credits in a box
     total_quarter_credits = quarter_credits['total']
     total_used_credits = used_credits['total']
+    total_transferred_credits = df_transferred.loc[group]['total']
 
     text_str = f'Total Requested: {total_quarter_credits * 1e-6:.1f}M\nTotal Used: {total_used_credits * 1e-6:.1f}M\nTotal Transferred: {total_transferred_credits * 1e-6:.1f}M'
 
