@@ -47,16 +47,20 @@ The download might take a lot of time, so you can also submit it as a bash job t
 sbatch download_era5_single_level.pbs
 ```
 
+
 > Note: The download script downloads only the hourly files (raw data fromat), the aggregation into daily or monthly files happens in step 2. 
 
 
 
 ### **2. Aggregating hourly ERA5 data to daily and monthly**
 
-Processes the downloaded climate data.
+Aggreggate the hourly ERA5 data to daily and monthly (statistics for daily available are mean, max and min) using [`aggregate_hourly_to_daily_monthly_era5.py`](./aggregate_hourly_to_daily_monthly_era5.py)
+
+The settings can be adapted in the python file. Under the hood, it uses cdo (which is installed through the env_era5 environment discussed above)
+
 
 ```bash
-python process_data.py --input-file <path_to_downloaded_file>
+python aggregate_hourly_to_daily_monthly_era5.py
 ```
 
 ## Additional Information

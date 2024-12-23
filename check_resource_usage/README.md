@@ -1,10 +1,12 @@
+# Check compute resources usage in Storage4Climate 
+
 A simple routine to monitor the compute credits usage of the S4C members.
 
 Originally created by Kobe Vandelanotte [kobebryant432](https://github.com/kobebryant432) from RMIB-UGent. All kudos to him :clap:
 
 Original github repo [VSC_ugent](https://github.com/kobebryant432/VSC_ugent). 
 
-# Current resources state
+## Current resources state
 
 ![](VSC_monitoring/output/monitoring.png)
 
