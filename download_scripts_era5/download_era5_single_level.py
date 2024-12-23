@@ -20,17 +20,17 @@ c = cdsapi.Client()
 import os
 
 ## USER SETTINGS
-dataset = "era5-land"  #'era5' #era5-land' #'cams'
-region = "belgium"  # 'europe', 'globe', 'world'; coordinates predefined below.
+dataset = "era5"  #'era5' #era5-land' #'cams'
+region = "europe"  # 'europe', 'globe', 'world'; coordinates predefined below.
 init_yr = 1940
 end_yr = 2024
 time_freq = "hourly"  # hourly is base resolution
 
 
 # set directory
-base_dir = "/dodrio/scratch/projects/2022_200/project_input/External/observations/"
+base_dir = "/dodrio/scratch/projects/2022_200/external/"
 
-var_lst = ["2m_temperature"]
+var_lst = ["2m_temperature"]  #2m_temperature
 
 
 """
@@ -161,7 +161,7 @@ else:
 # download ERA5 data
 for var_to_use in var_lst:
     dir_out = (
-        base_dir + dataset + "/" + region + "/" + time_freq + "/" + var_to_use + "/"
+        base_dir + dataset + "/" + region + "/" + var_to_use + "/" + time_freq + "/"
     )
     print(dir_out)
     os.makedirs(dir_out, exist_ok=True)
@@ -171,14 +171,14 @@ for var_to_use in var_lst:
         print(yr_to_use)
         target_filename = (
             dir_out
-            + dataset
-            + "-"
-            + time_freq
-            + "-"
-            + region
-            + "-"
             + var_to_use
-            + "-"
+            + "_"
+            + dataset
+            + "_"
+            + region
+            + "_"
+            + time_freq
+            + "_"
             + yr_to_use
             + ".nc"
         )

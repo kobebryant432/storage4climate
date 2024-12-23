@@ -1,0 +1,14 @@
+#!/bin/bash -l 
+
+#PBS -A 2022_202 
+#PBS -l walltime=72:00:00 
+#PBS -l nodes=1:ppn=1
+#PBS -N download_era5
+#PBS -o pbs_output/download_era5.out
+#PBS -e pbs_output/download_era5.err
+
+# loading the environment
+conda activate env_era5
+
+# Submitting postprocessing script, definition of the parameters 
+python download_era5_single_level.py 
