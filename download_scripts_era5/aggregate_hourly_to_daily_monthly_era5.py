@@ -16,10 +16,11 @@ import pandas as pd
 # Directories setup
 dir_base = "/dodrio/scratch/projects/2022_200/external/"
 
+
 # Variables initialization
 aggregation_method = ["mean","max", "min"] # other options: "min", "sum". calculate aggregation statistics 
 dataset = "era5"  # "era5-land"
-domain = "europe"  # "europe"
+domain = "europe" # "belgium" 
 init_yr = 1940
 end_yr = 2023
 
@@ -46,14 +47,19 @@ for var_to_use in var_name_lst:
     if dataset == "era5-land": 
         df_vars = pd.read_csv('era5-land_vars.csv')
         flag_cumul = df_vars.loc[df_vars['name.long'] == var_to_use,'cumul'] ==1
+        flag_cumul = flag_cumul.values[0]
+        print(flag_cumul)
     else: 
         flag_cumul = False
     for yr_to_use in yr_lst:
         file_base_hr = f"{var_to_use}_{dataset}_{domain}_{time_freq_hr}_{yr_to_use}.nc"
         file_hr = os.path.join(dir_base_var_hr, file_base_hr)
 
+        print(file_hr)
+
         if os.path.exists(file_hr):
             print(f"var: {var_to_use}, year: {yr_to_use}")
+            scratch_dir_to_use = dir_base_var_hr
 
             if flag_cumul:
                 file_tmp1 = os.path.join(scratch_dir_to_use, f"{file_base_hr}.tmp1")
