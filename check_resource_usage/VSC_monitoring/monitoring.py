@@ -16,13 +16,16 @@ import os
 #########################
 
 
-year = '2024'
-current_quarter = 'Q4'
+year = '2025'
+current_quarter = 'Q1'
 
-d_quarters = {'Q1': pd.date_range(start=pd.to_datetime("2024-02-08"), end=pd.to_datetime("2024-05-08")), 
-              'Q2': pd.date_range(start=pd.to_datetime("2024-05-08"),end=pd.to_datetime("2024-08-08")), 
-              'Q3': pd.date_range(start=pd.to_datetime("2024-08-08"),end=pd.to_datetime("2024-11-08")), 
-              'Q4': pd.date_range(start=pd.to_datetime("2024-11-08"),end=pd.to_datetime("2025-02-08")) }
+d_quarters = {'Q1': pd.date_range(start=pd.to_datetime("2025-02-08"),end=pd.to_datetime("2025-05-08")), 
+              'Q2': pd.date_range(start=pd.to_datetime("2025-05-08"),end=pd.to_datetime("2025-08-08")), 
+              'Q3': pd.date_range(start=pd.to_datetime("2025-08-08"),end=pd.to_datetime("2025-11-08")), 
+              'Q4': pd.date_range(start=pd.to_datetime("2025-11-08"),end=pd.to_datetime("2026-02-08")), 
+              'total': pd.date_range(start=pd.to_datetime("2025-02-08"),end=pd.to_datetime("2026-02-08")) }
+
+time_range_previous_cycle = pd.date_range(start=pd.to_datetime("2024-02-08"),end=pd.to_datetime("2025-02-08"))
 
 d_projects = {'BCLIMATE'  :  '2022_201', 
               'RCS'       :  '2022_202', 
@@ -46,14 +49,33 @@ date = pd.to_datetime('today').strftime('%Y%m%d')
 #########################
 
 #Get the git directory
-path_monitoring = f"check_resource_usage/VSC_monitoring/"
+path_monitoring = f"./check_resource_usage/VSC_monitoring/"
+# load requested resources in S4C proposal
 
-file = f"{path_monitoring}requested_resources_{year}.csv"
-# load requested resources
-# load requested resources
-df_initial_requested = pd.read_csv(file, delimiter=";",index_col=0)
-df_transferred = pd.read_csv(f"{path_monitoring}transferred_resources_{year}.csv", delimiter=";",index_col=0)
-df_requested = df_initial_requested + df_transferred
+df_requested_2024 = pd.read_csv(f"{path_monitoring}requested_resources_2024.csv", delimiter=";",index_col=0)
+df_transferred_2024 = pd.read_csv(f"{path_monitoring}transferred_resources_2024.csv", delimiter=";",index_col=0)
+
+df_used_2024 = pd.read_csv(f"{path_monitoring}used_resources_2024.csv", delimiter=";",index_col=0)
+
+# the final amount of credits available is the sum of the requested credits in the proposal and the transferred credits from the previous year, minus the use of the previous year. 
+
+ds_left_from_2024 = df_requested_2024['total']+ df_transferred_2024['total']  - df_used_2024['total']
+
+# redistribute what is left of 2024 evenly over quarters
+df_left_from_2024 = ds_left_from_2024.to_frame(name='total')
+
+for quarter in ['Q1', 'Q2', 'Q3', 'Q4']:
+    df_left_from_2024[quarter] = df_left_from_2024['total'].div(4)
+
+df_left_from_2024.reindex(columns=['Q1', 'Q2', 'Q3', 'Q4','total'])
+
+# load requested resources in S4C proposal in 2025
+df_requested_year = pd.read_csv(f"{path_monitoring}requested_resources_{year}.csv", delimiter=";",index_col=0)
+df_transferred_year = pd.read_csv(f"{path_monitoring}transferred_resources_{year}.csv", delimiter=";",index_col=0)
+
+
+df_requested = df_left_from_2024 + df_requested_year + df_transferred_year
+
 
 # select one project group
 
@@ -69,8 +91,6 @@ for i, group in enumerate(d_projects.keys()):
     all_files = glob.glob(f'{path}/*{project}.csv')
 
     df = pd.read_csv(all_files[0], header=1)
-
-
 
     #########################
     #     Pre-processing    #
@@ -92,6 +112,8 @@ for i, group in enumerate(d_projects.keys()):
     #Make a dictionary with the remaining credits per quarter by subtracting the total used from the total credits per quarter until there are no credits left
     used_credits = quarter_credits.copy().loc[['Q1','Q2','Q3','Q4']]
 
+    
+    used_credits_previouscycle = (df_credits[df_credits['Date'].isin(time_range_previous_cycle)]['Total_used']).sum()
 
 
     for key in d_quarters.keys():
@@ -99,7 +121,6 @@ for i, group in enumerate(d_projects.keys()):
         df_credits_quarter = df_credits[df_credits['Date'].isin(d_quarters[key])]
         used_credits[key] = (df_credits_quarter['Total_used']).sum()
         
-    used_credits['total'] = df_credits['Total_used'].sum()
 
 
     # save loaded credits for stacked bar plot
@@ -117,7 +138,10 @@ for i, group in enumerate(d_projects.keys()):
 
     ax = axes[i]
     # Plot remaining_credits and quarter_credits
-    ax.bar(quarter_credits.index, quarter_credits.values*1e-6, label='Requested credits', color='white',  edgecolor='gray', linewidth=2, width=0.4, align='center')
+
+    ax.bar(quarter_credits.index, quarter_credits.values*1e-6, label='Total available credits', color='white',  edgecolor='gray', linewidth=2, width=0.4, align='center')
+    ax.bar(df_left_from_2024.loc[group].index, df_left_from_2024.loc[group].values*1e-6, label='Of which leftover credits', color='white',edgecolor='gray', linewidth=2,linestyle='dashed', alpha=0.7, width=0.4, align='center')
+
     ax.bar(used_credits.index, used_credits.values*1e-6, label='Used credits', color=colors[i],edgecolor=colors[i], linewidth=2, alpha=0.3, width=0.4, align='center')
 
     # Add percentage text on top of each bar (used/quarter credits)
@@ -130,11 +154,12 @@ for i, group in enumerate(d_projects.keys()):
 
 
     # Add the total number of quarter and used credits in a box
-    total_quarter_credits = quarter_credits['total']
+    total_requested_credits = df_requested_year.loc[group]['total']
     total_used_credits = used_credits['total']
-    total_transferred_credits = df_transferred.loc[group]['total']
+    total_transferred_credits = df_transferred_year.loc[group]['total']
+    total_left_credits = df_left_from_2024.loc[group]['total']
 
-    text_str = f'Total Requested: {total_quarter_credits * 1e-6:.1f}M\nTotal Used: {total_used_credits * 1e-6:.1f}M\nTotal Transferred: {total_transferred_credits * 1e-6:.1f}M'
+    text_str = f'Requested in {year}: {total_requested_credits * 1e-6:.1f}M\nLeft from 2024: {total_left_credits * 1e-6:.1f}M\nUsed: {total_used_credits * 1e-6:.1f}M\nTransferred: {total_transferred_credits * 1e-6:.1f}M'
 
     # Add text with a box around it
     ax.text(0.8, 0.96, text_str, transform=ax.transAxes, ha='right', va='top', fontsize=12,
@@ -147,7 +172,6 @@ for i, group in enumerate(d_projects.keys()):
     ax.set_title(f'{group} ({project})', loc='left', size=16)
     ax.legend( frameon=False, loc='upper left')
 
-
 ## stacked figure
 
 ax = axes[-1]
@@ -156,6 +180,7 @@ df_used_credits.loc['total'] = df_used_credits.loc[['Q1','Q2','Q3','Q4']].sum()
 
 
 (df_requested_credits*1e-6).sum(axis=1).plot.bar(ax=ax, label='Requested credits', color='white',  edgecolor='gray', linewidth=2, width=0.4, align='center')
+
 (df_used_credits*1e-6).plot.bar(ax=ax, stacked=True, label='Used credits', color=colors,linewidth=2,  edgecolor='gray', alpha=0.5, width=0.4, align='center')
 
 
@@ -168,11 +193,14 @@ for idx in range(len(df_requested_credits) ):  # Exclude 'total' row for now
 
 
 # Add the total number of quarter and used credits in a box
-total_quarter_credits = (df_requested_credits.loc[['Q1','Q2','Q3','Q4']]).sum(axis=1).sum()
+total_quarter_credits = (df_requested_year.drop(columns=['total']).transpose()).sum().sum()#(df_requested_credits.loc[['Q1','Q2','Q3','Q4']]).sum(axis=1).sum()
+total_requested_left_credits = (df_requested_credits.loc[['Q1','Q2','Q3','Q4']]).sum(axis=1).sum()
+
 total_used_credits = (df_used_credits.loc[['Q1','Q2','Q3','Q4']]).sum().sum()
+total_left_from_2024 = (df_left_from_2024.drop(columns=['total']).transpose()).sum().sum()
 
 
-text_str = f'Total Requested: {total_quarter_credits * 1e-6:.0f}M\nTotal Used: {total_used_credits * 1e-6:.0f}M'
+text_str = f'Requested in {year}: {total_quarter_credits * 1e-6:.0f}M\n Left from 2024: {total_left_from_2024 * 1e-6:.0f}M\n Total available: {total_requested_left_credits * 1e-6:.0f}M\n Used: {total_used_credits * 1e-6:.0f}M'
 
 # Add text with a box around it
 ax.text(0.8, 0.96, text_str, transform=ax.transAxes, ha='right', va='top', fontsize=12,
@@ -201,3 +229,5 @@ df_used_credits.to_csv(f'{path_monitoring}/output/used_resources.csv')
 shutil.move(all_files[0], f'{path_monitoring}/archive/')
 shutil.copy(f'{path_monitoring}/output/monitoring.png', f'{path_monitoring}/archive/{current_quarter}_{date}_monitoring.png')
 shutil.copy(f'{path_monitoring}/output/used_resources.csv', f'{path_monitoring}/archive/{current_quarter}_{date}_used_resources.csv')
+
+
