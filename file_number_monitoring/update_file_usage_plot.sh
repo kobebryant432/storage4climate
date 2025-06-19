@@ -11,6 +11,7 @@ bash parse_file_number.sh
  
 python plot_file_usage.py
 
+git checkout file_no
 git pull
 git add plots/file_usage_plot.png
 git commit -m "Add usage data for all projects"
