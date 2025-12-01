@@ -17,6 +17,9 @@ data = pd.read_csv(data_file, sep='\s+', names=['date', 'time', 'files', 'quota'
 data['datetime'] = pd.to_datetime(data['date'] + ' ' + data['time'])
 data = data.sort_values('datetime')
 
+data['files'] = data['files'].astype(int)
+data['quota'] = data['quota'].astype(int)
+
 # Plot the number of files over time
 plt.figure(figsize=(10, 6))
 plt.plot(data['datetime'], data['files'], label='Number of Files')
