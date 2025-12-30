@@ -2,7 +2,7 @@
 
 
 # List of project names to iterate over
-project_names=(""  "2022_201" "2022_202" "2022_203" "2022_204" "2022_205")
+project_names=("2022_201" "2022_202" "2022_203" "2022_204" "2022_205")
 
 # Ensure the script is run from the correct directory
 cd "$(dirname "$0")"
@@ -20,7 +20,7 @@ for project_name in "${project_names[@]}"; do
     cp "$file" "$input_file"
 
     # Remove all lines before the line containing "Project Usages" but keep the line itself
-    sed -i '1,/Project Usages/{/Project Usages/!d}' "$input_file"
+    #sed -i '1,/Project Usages/{/Project Usages/!d}' "$input_file"
 
     echo "Copied project: $project_name"
 
