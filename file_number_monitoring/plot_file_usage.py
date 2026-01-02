@@ -29,7 +29,17 @@ plt.axhline(y=data['quota'].iloc[-1], color='orange', linestyle='--', label='Quo
 plt.xlabel('Time')
 plt.ylabel('Number of Files')
 plt.title('Number of Files Over Time')
-plt.ylim(top=data['quota'].iloc[-1]* 1.0001)  # Set Y-axis limit to 0.0a1% above the quota
+plt.ylim(top=data['quota'].iloc[-1]* 1.0001)  # Set Y-axis limit to 0.01% above the quota
+
+#Add an inline subplot in the bottom left corner with a zoom in of the last 2 weeks
+ax_inset = plt.axes([0.65, 0.1, 0.3, 0.3])
+two_weeks_ago = data['datetime'].iloc[-1] - pd.Timedelta(weeks=2)
+inset_data = data[data['datetime'] >= two_weeks_ago]
+ax_inset.plot(inset_data['datetime'], inset_data['files'], label='Number of Files')
+ax_inset.axhline(y=inset_data['quota'].iloc[-1], color='orange', linestyle='--', label='Quota')
+ax_inset.set_title('Last 2 Weeks')
+ax_inset.set_xticks([])
+ax_inset.set_yticks([])
 
 # Format the Y-axis to show values in millions with 2 decimal places
 plt.gca().get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x / 1e6:.2f}M'))
