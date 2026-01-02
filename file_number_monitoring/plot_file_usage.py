@@ -17,6 +17,8 @@ data = pd.read_csv(data_file, sep='\s+', names=['date', 'time', 'files', 'quota'
 data['datetime'] = pd.to_datetime(data['date'] + ' ' + data['time'])
 data = data.sort_values('datetime')
 
+#Remove all '*' from files 
+data['files'] = data['files'].astype(str).str.replace('*', '', regex=False)
 data['files'] = data['files'].astype(int)
 data['quota'] = data['quota'].astype(int)
 
